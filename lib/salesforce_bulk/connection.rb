@@ -41,6 +41,7 @@ module SalesforceBulk
 
       response = post_xml(@@LOGIN_HOST, @@LOGIN_PATH, xml, headers)
       # response_parsed = XmlSimple.xml_in(response)
+
       response_parsed = parse_response response
 
       @session_id = response_parsed['Body'][0]['loginResponse'][0]['result'][0]['sessionId'][0]
@@ -96,8 +97,11 @@ module SalesforceBulk
     end
 
     def parse_response response
-      response_parsed = XmlSimple.xml_in(response)
-
+      begin
+        response_parsed = XmlSimple.xml_in(response)
+      rescue => error
+        raise "Error trying to parse the following response from Salesforce: #{response} - Error details: #{error.class.name}: #{error.message}.\nBacktrace:\n#{error.backtrace}."
+      end
       if response.downcase.include?("faultstring") || response.downcase.include?("exceptionmessage")
         begin
           
